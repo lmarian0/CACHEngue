@@ -5,7 +5,7 @@ Entonces, compilemos nuestro código con la opción '-pg':
 
 **$ gcc \-Wall \-pg test\_gprof.c test\_gprof\_new.c \-o test\_gprof**
 
-![][image13.png]
+![](image13.png)
 
 ## **Paso 2: Ejecutar el código**
 
@@ -15,7 +15,7 @@ En el segundo paso, se ejecuta el archivo binario producido como resultado del p
 **$ ./test\_gprof**   
 **$ ls**
 
-![][image7.png]
+![](image7.png)
 
 Entonces vemos que cuando se ejecuta el binario, se genera un nuevo archivo 'gmon.out' en el directorio de trabajo actual.
 
@@ -26,7 +26,7 @@ En este paso, la herramienta gprof se ejecuta con el nombre del ejecutable y el 
 **$  gprof test\_gprof gmon.out \> analysis.txt**  
 **$ ls**
 
-![][image12.png]
+![](image12.png)
 
 Entonces vemos que se generó un archivo llamado 'analysis.txt'.
 
@@ -34,7 +34,7 @@ Entonces vemos que se generó un archivo llamado 'analysis.txt'.
 
 Cómo se produjo anteriormente, toda la información de perfil ahora está presente en 'analysis.txt'. Echemos un vistazo a este archivo de texto:
 
-![][image4.png]
+![](image4.png)
 
 * **%** el porcentaje del tiempo total de funcionamiento del programa de tiempo utilizado para esta función.  
 * **cumulative** una suma corriente del número de segundos contabilizados, segundos por esta función y las enumeradas anteriormente.  
@@ -44,7 +44,7 @@ Cómo se produjo anteriormente, toda la información de perfil ahora está prese
 * **total** el número promedio de milisegundos gastados en este función ms/call y sus descendientes por llamada, si esto la función está perfilada, de lo contrario, en blanco.  
 * **name** el nombre de la función. Este es el tipo menor para este listado. El índice muestra la ubicación de la función en la lista de gprof. Si el índice es entre paréntesis muestra dónde aparecería en el listado de gprof si fuera a ser impreso.
 
-![][image17.png]
+![](image17.png)
 
 Esta tabla describe el árbol de llamadas del programa y fue ordenada por la cantidad total de tiempo empleado en cada función y sus hijos.
 
@@ -77,7 +77,7 @@ Para los hijos de la función, los campos tienen los siguientes significados:
 Si hay ciclos (círculos) en el gráfico de llamadas, hay un entrada para el ciclo como un todo. Esta entrada muestra quién llamó al ciclo (como padres) y los miembros del ciclo (como hijos).  
 La entrada de llamadas recursivas \`+' muestra el número de llamadas de función que eran internos al ciclo, y la entrada de llamadas para cada miembro muestra, para ese miembro, ¿cuántas veces fue llamado de otros miembros de el ciclo.
 
-![][image3.png]
+![](image3.png)
 
 Como ya se ha comentado, este archivo se divide en dos partes principales:  
 1\. Perfil plano
@@ -87,13 +87,13 @@ Las columnas individuales (tanto del perfil plano como del gráfico de llamadas)
 
 ### **1\. Suprima la impresión de funciones declaradas estáticamente (privadas) usando \-a**  **$ gprof \-a test\_gprof gmon.out \> analysis.txt** 
 
-![][image2.png]
+![](image2.png)
 
-![][image18.png]  
+![](image18.png)  
 ...  
 ...  
 ...  
-![][image10.png]  
+![](image10.png)  
 ...  
 ...  
 …
@@ -104,27 +104,27 @@ Entonces vemos que no hay información relacionada con func2 (que se define como
 
 **$ gprof \-b test\_gprof gmon.out \> analysis.txt**
 
-![][image16.png]
+![](image16.png)
 
-![][image9.png]
+![](image9.png)
 
-![][image14.png]
+![](image14.png)
 
 ### **3\. Imprima solo perfil plano usando \-p**
 
 **$ gprof \-p \-b test\_gprof gmon.out \> analysis.txt**
 
-![][image15.png]
+![](image15.png)
 
-![][image18.png]
+![](image18.png)
 
 **4\. Imprimir información relacionada con funciones específicas en perfil plano**
 
 **$ gprof \-pfunc1 \-b test\_gprof gmon.out \> analysis.txt**
 
-![][image1.png]
+![](image1.png)
 
-![][image8.png]
+![](image8.png)
 
 ## **Genere un gráfico** 
 
@@ -136,9 +136,9 @@ instalar gprof2dot:
 instalar graphviz (que es necesario si va a hacer gráficos de "puntos" como el siguiente):   
 **$sudo apt install graphviz** 
 
-![][image5.png]
+![](image5.png)
 
-![][image11.png]
+![](image11.png)
 
 ## **Conclusión del Análisis de Time Profiling**
 
