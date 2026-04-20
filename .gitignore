@@ -1,0 +1,8 @@
+
+# Build artifacts
+*.o
+*.so
+test_float_to_int
+test_gini_plus_one
+test_process_gini
+__pycache__/
