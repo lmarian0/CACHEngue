@@ -36,7 +36,7 @@ def get_gini_data():
 def main():
     datos = get_gini_data()
     
-    ruta_libreria = "TP2/CAPA_2/libgini.so" 
+    ruta_libreria = "./libgini.so" 
     
     # 1. Cargamos la librería en la memoria de Python
     lib = ctypes.CDLL(ruta_libreria)
