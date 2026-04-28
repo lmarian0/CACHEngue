@@ -69,7 +69,9 @@ Para verificar la ubicación y contenido del programa dentro de la imagen binari
 * **`hd` (o `hexdump`):** Muestra el contenido "crudo" (raw) del archivo en formato hexadecimal. No interpreta si un byte es una instrucción de CPU o un dato.
 * **Verificación:** Al comparar ambos, se puede observar que el desplazamiento (offset) en el archivo mostrado por `hd` coincide con la secuencia de bytes (opcodes) que `objdump` identifica como instrucciones en una dirección de memoria específica.
 
+![Primera ejecucion de codigo](img/archivo_bin.png)
 
+![Primera ejecucion de codigo](img/comparacion_objdum_hd.png)
 
 ---
 
@@ -79,6 +81,8 @@ Para probar un binario de bajo nivel en una PC, se debe escribir el archivo dire
 * **Comando de grabación (Linux):** `sudo dd if=imagen.bin of=/dev/sdX bs=512 count=1`  
     *(Donde `/dev/sdX` es la unidad del pendrive).*
 * **Prueba:** Se debe configurar la BIOS/UEFI de la PC para arrancar desde el dispositivo USB en modo "Legacy". Si el código es correcto (termina con la firma `0xAA55`), el procesador cargará el código en `0x7C00` y comenzará la ejecución.
+
+<!--- no pude acceder al pendrive desde la bios -->
 
 ---
 
