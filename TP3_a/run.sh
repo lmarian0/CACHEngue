@@ -3,4 +3,4 @@ qemu-system-x86_64 -m 512 \
   -drive file=fat:rw:hdd,format=raw,media=disk \
   -net none \
   -display gtk \
-  -s
+  -s -S
