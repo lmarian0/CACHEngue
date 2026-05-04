@@ -84,6 +84,8 @@ Para probar un binario de bajo nivel en una PC, se debe escribir el archivo dire
 
 <!--- no pude acceder al pendrive desde la bios -->
 
+![Qemu registros](img/qemu_registers.png)
+
 ---
 
 ###  ¿Para qué se utiliza la opción `--oformat binary`?
