@@ -162,11 +162,11 @@ sudo qemu-system-x86_64 -hda /dev/sdc
 
 ---
 
-# Transición a Modo Protegido (x86)
+## Parte 4: Transición a Modo Protegido (x86)
 
-Este proyecto demuestra la transición de un procesador x86 desde el **Modo Real** (16 bits) al **Modo Protegido** (32 bits), configurando manualmente la **GDT (Global Descriptor Table)** sin utilizar macros.
+Se demuestra la transición de un procesador x86 desde el **Modo Real** (16 bits) al **Modo Protegido** (32 bits), configurando manualmente la **GDT (Global Descriptor Table)** sin utilizar macros.
 
-## Implementación y Secuencia de Activación
+### Implementación y Secuencia de Activación
 
 Para pasar a modo protegido, se realizó la siguiente secuencia lógica en ensamblador:
 1.  **cli**: Desactivación de interrupciones.
@@ -176,7 +176,7 @@ Para pasar a modo protegido, se realizó la siguiente secuencia lógica en ensam
 ![Secuencia de activación en GDB](img/secuencia_activacion.png)
 *Captura 1: Manipulación de los registros de control para iniciar el cambio de modo.*
 
-## Configuración de la GDT
+### Configuración de la GDT
 
 Se definieron dos descriptores de memoria con espacios físicamente diferenciados para separar el código de los datos:
 * **Descriptor de Código**: Base en `0x00000000`.
@@ -187,7 +187,7 @@ Al realizar el **Far Jump** (`ljmp`), el procesador cambia su arquitectura inter
 ![Cambio de arquitectura a 32 bits](img/arquitectura_32bits.png)
 *Captura 2: GDB detecta el cambio de arquitectura a i386 tras el salto largo.*
 
-## Registros de Segmento en Modo Protegido
+### Registros de Segmento en Modo Protegido
 
 **Pregunta del TP: ¿Con qué valor se cargan los registros de segmento y por qué?**
 
@@ -198,7 +198,7 @@ En modo protegido, los registros de segmento (`DS`, `ES`, `FS`, `GS`, `SS`) se c
 ![Uso de selectores en los registros](img/registros_selector.png)
 *Captura 3: Se observa la carga del valor 0x10 en los registros de segmento.*
 
-## Experimento de Protección (Read-Only)
+### Experimento de Protección (Read-Only)
 
 Se modificó el bit de acceso del segmento de datos a **Solo Lectura (`0x90`)** para testear la seguridad del hardware.
 
@@ -208,7 +208,7 @@ Se modificó el bit de acceso del segmento de datos a **Solo Lectura (`0x90`)** 
 ![Evidencia de la Triple Falta y reinicio](img/error_escritura.png)
 *Captura 4: El puntero de instrucción salta a la dirección del BIOS (0xe05b) tras el fallo de protección.*
 
-## Cómo ejecutar
+### Cómo ejecutar
 1.  Entrar a la carpeta: `cd TP3`
 2.  Compilar y correr: `./compilarycorrer`
 3.  Para depurar: `gdb -ex "target remote :1234" -ex "layout asm"`
