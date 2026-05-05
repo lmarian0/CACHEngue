@@ -1,5 +1,11 @@
 # TP3_a - Entorno UEFI: Hello World y Depuración con GDB
 
+## Alumnos
+
+- Lautaro Nicolas Callovi
+- Mariano Luis Rivera
+- Lucas Cerri
+
 ## Objetivo
 
 Desarrollar una aplicación nativa UEFI en C que imprima "Hello World" en pantalla, compilarla al formato PE/COFF, ejecutarla en un entorno emulado con QEMU/OVMF y depurarla en tiempo real usando GDB con remote debugging.
