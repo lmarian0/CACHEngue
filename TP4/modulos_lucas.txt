@@ -1,0 +1,64 @@
+Module                  Size  Used by
+snd_seq_dummy          12288  0
+snd_hrtimer            12288  1
+qrtr                   53248  2
+snd_intel8x0           53248  2
+snd_ac97_codec        196608  1 snd_intel8x0
+ac97_bus               12288  1 snd_ac97_codec
+snd_pcm               200704  3 snd_intel8x0,snd_ac97_codec
+intel_rapl_msr         20480  0
+intel_rapl_common      53248  1 intel_rapl_msr
+snd_seq_midi           24576  0
+snd_seq_midi_event     16384  1 snd_seq_midi
+snd_rawmidi            57344  1 snd_seq_midi
+intel_uncore_frequency_common    20480  0
+intel_pmc_core        135168  0
+pmt_telemetry          16384  1 intel_pmc_core
+pmt_discovery          20480  1 pmt_telemetry
+snd_seq               122880  9 snd_seq_midi,snd_seq_midi_event,snd_seq_dummy
+pmt_class              20480  2 pmt_telemetry,pmt_discovery
+intel_pmc_ssram_telemetry    16384  1 intel_pmc_core
+intel_vsec             24576  2 intel_pmc_ssram_telemetry,pmt_telemetry
+snd_seq_device         16384  3 snd_seq,snd_seq_midi,snd_rawmidi
+snd_timer              53248  3 snd_seq,snd_hrtimer,snd_pcm
+vmwgfx                471040  1
+polyval_clmulni        12288  0
+ghash_clmulni_intel    12288  0
+aesni_intel            98304  0
+rapl                   20480  0
+snd                   143360  12 snd_seq,snd_seq_device,snd_intel8x0,snd_timer,snd_ac97_codec,snd_pcm,snd_rawmidi
+drm_ttm_helper         16384  2 vmwgfx
+joydev                 32768  0
+i2c_piix4              32768  0
+ttm                   126976  2 vmwgfx,drm_ttm_helper
+vboxguest              57344  0
+soundcore              16384  1 snd
+i2c_smbus              20480  1 i2c_piix4
+binfmt_misc            24576  1
+input_leds             12288  0
+mac_hid                12288  0
+serio_raw              20480  0
+sch_fq_codel           24576  2
+msr                    12288  0
+parport_pc             53248  0
+ppdev                  24576  0
+lp                     32768  0
+parport                73728  3 parport_pc,lp,ppdev
+efi_pstore             12288  0
+nfnetlink              20480  1
+dmi_sysfs              20480  0
+ip_tables              32768  0
+x_tables               65536  1 ip_tables
+autofs4                57344  2
+hid_generic            12288  0
+usbhid                 77824  0
+hid                   262144  2 usbhid,hid_generic
+ahci                   49152  1
+vga16fb                32768  0
+psmouse               217088  0
+vgastate               20480  1 vga16fb
+libahci                53248  1 ahci
+e1000                 180224  0
+video                  77824  0
+pata_acpi              12288  0
+wmi                    28672  1 video
