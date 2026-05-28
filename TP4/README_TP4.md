@@ -7,7 +7,7 @@ Este archivo contiene el desarrollo, las respuestas al cuestionario teórico y l
 
 ---
 
-## 🛠️ Preparación y Compilación del Módulo
+##  Preparación y Compilación del Módulo
 
 De acuerdo con las guías del TP, preparamos el entorno e instalamos las herramientas esenciales:
 `sudo apt-get update`
@@ -23,7 +23,7 @@ Como se observa en las capturas adjuntas, el ciclo de compilación, carga y desc
 
 ---
 
-## 🔬 Resolución de Desafíos y Cuestionario
+##  Resolución de Desafíos y Cuestionario
 
 ### Desafío #1: Empaquetado y Seguridad
 * **¿Qué es `checkinstall` y para qué sirve?**
