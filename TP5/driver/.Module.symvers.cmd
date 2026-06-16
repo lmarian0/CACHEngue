@@ -1,0 +1,1 @@
+cmd_/home/lautaro/facultad/SisComp/CACHEngue/TP5/driver/Module.symvers := sed 's/ko$$/o/' /home/lautaro/facultad/SisComp/CACHEngue/TP5/driver/modules.order | scripts/mod/modpost -m -a   -o /home/lautaro/facultad/SisComp/CACHEngue/TP5/driver/Module.symvers -e    -T -

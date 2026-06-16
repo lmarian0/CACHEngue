@@ -1,0 +1,1 @@
+cmd_/home/lautaro/facultad/SisComp/CACHEngue/TP5/driver/signal_driver.ko := arm-linux-gnueabihf-ld -r -EL --build-id=sha1  -T scripts/module.lds -o /home/lautaro/facultad/SisComp/CACHEngue/TP5/driver/signal_driver.ko /home/lautaro/facultad/SisComp/CACHEngue/TP5/driver/signal_driver.o /home/lautaro/facultad/SisComp/CACHEngue/TP5/driver/signal_driver.mod.o;  true
