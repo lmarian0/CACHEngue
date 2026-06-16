@@ -1,0 +1,1 @@
+cmd_/home/lautaro/facultad/SisComp/CACHEngue/TP5/driver/signal_driver.mod := { echo  /home/lautaro/facultad/SisComp/CACHEngue/TP5/driver/signal_driver.o;  echo; } > /home/lautaro/facultad/SisComp/CACHEngue/TP5/driver/signal_driver.mod

@@ -1,0 +1,263 @@
+/*
+ * signal_driver.c - Character Device Driver (CDD)
+ * 
+ * Simula dos señales periódicas con período de 1 segundo:
+ *   - Señal 0: Senoidal  (amplitud 100, offset 0)
+ *   - Señal 1: Cuadrada  (amplitud 100, duty cycle 50%)
+ *
+ * Interfaz con espacio de usuario:
+ *   read()  -> devuelve el último sample como string "valor\n"
+ *   ioctl() -> selecciona qué señal leer (SIGNAL_SET_CH)
+ *
+ * Compilar con el Makefile adjunto.
+ */
+
+#include <linux/module.h>
+#include <linux/kernel.h>
+#include <linux/init.h>
+#include <linux/fs.h>
+#include <linux/cdev.h>
+#include <linux/device.h>
+#include <linux/uaccess.h>
+#include <linux/timer.h>
+#include <linux/jiffies.h>
+#include <linux/ioctl.h>
+#include <linux/mutex.h>
+#include <linux/math64.h>
+
+
+/* ---------- Macros de configuración ---------- */
+#define DRIVER_NAME     "signal_driver"
+#define DEVICE_NAME     "signaldev"
+#define CLASS_NAME      "signal"
+#define SAMPLE_PERIOD   HZ          /* 1 segundo en jiffies */
+
+/* Comandos ioctl */
+#define SIGNAL_MAGIC    'S'
+#define SIGNAL_SET_CH   _IOW(SIGNAL_MAGIC, 0, int)   /* Seleccionar canal 0 o 1 */
+#define SIGNAL_GET_CH   _IOR(SIGNAL_MAGIC, 1, int)   /* Leer canal activo       */
+
+static int channel_param = 0;
+module_param(channel_param, int, 0644);
+MODULE_PARM_DESC(channel_param, "Canal inicial: 0=senoidal, 1=cuadrada");
+
+/* ---------- Tabla de seno entera (0..90°, paso 1°) ----------
+ * Valores = sin(deg) * 1000  (sin escalado en punto flotante en kernel)
+ */
+static const int sin_table[91] = {
+       0,   17,  35,  52,  70,  87, 105, 122, 139, 156,
+     174, 191, 208, 225, 242, 259, 276, 292, 309, 326,
+     342, 358, 375, 391, 407, 423, 438, 454, 469, 485,
+     500, 515, 530, 545, 559, 574, 588, 602, 616, 629,
+     643, 656, 669, 682, 695, 707, 719, 731, 743, 755,
+     766, 777, 788, 799, 809, 819, 829, 839, 848, 857,
+     866, 875, 883, 891, 899, 906, 914, 921, 927, 934,
+     940, 946, 951, 956, 961, 966, 970, 974, 978, 982,
+     985, 988, 990, 993, 995, 996, 998, 999, 999,1000,
+    1000
+};
+
+/* Calcula sin(degree) * 1000, para 0..359 grados */
+static int isin(int deg)
+{
+    deg = ((deg % 360) + 360) % 360;   /* normalizar */
+    if (deg <= 90)  return  sin_table[deg];
+    if (deg <= 180) return  sin_table[180 - deg];
+    if (deg <= 270) return -sin_table[deg - 180];
+    return                 -sin_table[360 - deg];
+}
+
+/* ---------- Variables globales del driver ---------- */
+static int              major_number;
+static struct class    *signal_class  = NULL;
+static struct device   *signal_device = NULL;
+static struct cdev      signal_cdev;
+
+static struct timer_list sample_timer;
+static DEFINE_MUTEX(data_mutex);
+
+static int  active_channel = 0;   /* Canal seleccionado: 0 o 1 */
+static int  current_sample = 0;   /* Último sample calculado   */
+static int  phase_deg      = 0;   /* Fase actual en grados (señal senoidal) */
+static int  square_state   = 0;   /* Estado actual señal cuadrada           */
+
+/* ---------- Timer callback: muestrea las señales ---------- */
+static void sample_callback(struct timer_list *t)
+{
+    int val;
+
+    mutex_lock(&data_mutex);
+
+    if (active_channel == 0) {
+        /* Señal senoidal: amplitud 100 unidades */
+        val = (isin(phase_deg) * 100) / 1000;
+        phase_deg = (phase_deg + 6) % 360;  /* 6°/tick → 360° en 60 ticks = 60 seg
+                                               * Pero período timer = 1 s → 6° por segundo
+                                               * → período completo = 60 s.
+                                               * Para demostración usamos 36°/s → T=10 s */
+        /* Sobreescribir: 36°/s para que el período de la senoidal sea 10 s */
+        phase_deg = (phase_deg - 6 + 36) % 360;
+    } else {
+        /* Señal cuadrada: ±100, cambio cada segundo */
+        square_state ^= 1;
+        val = square_state ? 100 : -100;
+    }
+
+    current_sample = val;
+    mutex_unlock(&data_mutex);
+
+    /* Reprogramar timer */
+    mod_timer(&sample_timer, jiffies + SAMPLE_PERIOD);
+}
+
+/* ---------- Operaciones del dispositivo de caracteres ---------- */
+
+static int dev_open(struct inode *inodep, struct file *filep)
+{
+    pr_info("%s: dispositivo abierto\n", DRIVER_NAME);
+    return 0;
+}
+
+static int dev_release(struct inode *inodep, struct file *filep)
+{
+    pr_info("%s: dispositivo cerrado\n", DRIVER_NAME);
+    return 0;
+}
+
+/*
+ * read(): Devuelve el último sample como cadena ASCII terminada en '\n'.
+ * Formato: "-100\n"  (máximo 7 bytes incluyendo signo y newline)
+ */
+static ssize_t dev_read(struct file *filep, char __user *buf,
+                         size_t len, loff_t *offset)
+{
+    char msg[16];
+    int sample;
+
+    mutex_lock(&data_mutex);
+    sample = current_sample;
+    mutex_unlock(&data_mutex);
+
+    snprintf(msg, sizeof(msg), "%d\n", sample);
+
+    return simple_read_from_buffer(buf, len, offset, msg, strlen(msg));
+}
+
+/*
+ * ioctl(): Permite seleccionar el canal activo.
+ *   SIGNAL_SET_CH(int ch)  → ch = 0 (senoidal) | 1 (cuadrada)
+ *   SIGNAL_GET_CH(int *ch) → devuelve canal actual
+ */
+static long dev_ioctl(struct file *filep, unsigned int cmd, unsigned long arg)
+{
+    return -ENOTTY;
+}
+
+static ssize_t dev_write(struct file *filep, const char __user *buf,
+                          size_t len, loff_t *offset)
+{
+    char kbuf[4];
+    int ch;
+
+    if (len < 1)
+        return -EINVAL;
+
+    if (!access_ok(buf, 1))
+        return -EFAULT;
+
+    if (__get_user(kbuf[0], buf))
+        return -EFAULT;
+
+    ch = kbuf[0] - '0';
+    if (ch != 0 && ch != 1)
+        return -EINVAL;
+
+    mutex_lock(&data_mutex);
+    active_channel = ch;
+    phase_deg      = 0;
+    square_state   = 0;
+    mutex_unlock(&data_mutex);
+
+    pr_info("%s: canal cambiado a %d\n", DRIVER_NAME, ch);
+    return len;
+}
+
+static const struct file_operations fops = {
+    .owner   = THIS_MODULE,
+    .open    = dev_open,
+    .release = dev_release,
+    .read    = dev_read,
+};
+
+/* ---------- Init / Exit del módulo ---------- */
+
+static int __init signal_driver_init(void)
+{
+    dev_t dev_num;
+    int ret;
+
+    /* 1. Asignar major number dinámicamente */
+    ret = alloc_chrdev_region(&dev_num, 0, 1, DRIVER_NAME);
+    if (ret < 0) {
+        pr_err("%s: alloc_chrdev_region falló (%d)\n", DRIVER_NAME, ret);
+        return ret;
+    }
+    major_number = MAJOR(dev_num);
+
+    /* 2. Inicializar y agregar cdev */
+    cdev_init(&signal_cdev, &fops);
+    signal_cdev.owner = THIS_MODULE;
+    ret = cdev_add(&signal_cdev, dev_num, 1);
+    if (ret < 0) {
+        unregister_chrdev_region(dev_num, 1);
+        pr_err("%s: cdev_add falló (%d)\n", DRIVER_NAME, ret);
+        return ret;
+    }
+
+    /* 3. Crear clase y dispositivo (genera /dev/signaldev) */
+    signal_class = class_create(THIS_MODULE, CLASS_NAME);
+    if (IS_ERR(signal_class)) {
+        cdev_del(&signal_cdev);
+        unregister_chrdev_region(dev_num, 1);
+        return PTR_ERR(signal_class);
+    }
+
+    signal_device = device_create(signal_class, NULL,
+                                   MKDEV(major_number, 0),
+                                   NULL, DEVICE_NAME);
+    if (IS_ERR(signal_device)) {
+        class_destroy(signal_class);
+        cdev_del(&signal_cdev);
+        unregister_chrdev_region(dev_num, 1);
+        return PTR_ERR(signal_device);
+    }
+
+    /* 4. Configurar timer de muestreo */
+    timer_setup(&sample_timer, sample_callback, 0);
+    mod_timer(&sample_timer, jiffies + SAMPLE_PERIOD);
+
+    pr_info("%s: módulo cargado, major=%d, /dev/%s listo\n",
+            DRIVER_NAME, major_number, DEVICE_NAME);
+
+    if (channel_param == 0 || channel_param == 1)
+    active_channel = channel_param;
+    return 0;
+}
+
+static void __exit signal_driver_exit(void)
+{
+    del_timer_sync(&sample_timer);
+    device_destroy(signal_class, MKDEV(major_number, 0));
+    class_destroy(signal_class);
+    cdev_del(&signal_cdev);
+    unregister_chrdev_region(MKDEV(major_number, 0), 1);
+    pr_info("%s: módulo descargado\n", DRIVER_NAME);
+}
+
+module_init(signal_driver_init);
+module_exit(signal_driver_exit);
+
+MODULE_LICENSE("GPL");
+MODULE_AUTHOR("Estudiante FIUBA");
+MODULE_DESCRIPTION("CDD - Dos señales periódicas (senoidal y cuadrada)");
+MODULE_VERSION("1.0");
